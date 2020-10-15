@@ -10,7 +10,7 @@ import pandas as pd
 import cartopy.crs as ccrs
 from scipy import stats
 import seaborn as sns
-import scipy.spatial
+
 
 from xarray_clim import standardize_dataset, sellonlatbox, weighted_areamean
 
@@ -97,16 +97,21 @@ for date in pd.date_range('201906011200','201908251200', freq='5d'):
         g = dca_flat
 
         ameans_anom = ameans - ameans.mean()
-        # get the 95th percentile of the area mean anomalies
-        amean_anom_perc = np.percentile(ameans_anom,95)
+        # convert from xarray to numpy
+        ameans_anom = ameans_anom.values
 
-        # scale g to have the same area mean anomaly
-        dca_scaled = g * amean_anom_perc / np.mean(g)
+        # scale g
+        # on amplitude of worst member
+        dca_scaled_worstmem = g * np.max(ameans_anom) / np.mean(g)
+        # an mean amplitude of top 5 members
+        dca_scaled_top5 = g * np.mean(np.sort(ameans_anom)[-5:] )/ np.mean(g)
 
         # convert to array with right coordinates (we select member 1 since the coords are the same for all mems)
-        dca_flat_xr = xr.DataArray(dca_scaled.T, coords=flat_anom_xr.isel(number=0).coords,
-                                   dims=flat_anom_xr.isel(number=0).dims)
-        dca = dca_flat_xr.unstack('z')
+        dca_scaled_worstmem = xr.DataArray(dca_scaled_worstmem.T, coords=flat_anom_xr.isel(number=0).coords,
+                                   dims=flat_anom_xr.isel(number=0).dims).unstack('z')
+        dca_scaled_top5 = xr.DataArray(dca_scaled_top5.T, coords=flat_anom_xr.isel(number=0).coords,
+                                   dims=flat_anom_xr.isel(number=0).dims).unstack('z')
+
 
 
         projection = ccrs.PlateCarree()
@@ -115,95 +120,94 @@ for date in pd.date_range('201906011200','201908251200', freq='5d'):
         perc_fitted_amean_anom = np.mean(perc_fitted - ensmean).values
         worst_member_amean_anom = np.mean(worst_member - ensmean).values
         worst_5_amean_anom = np.mean(worst_5 - ensmean).values
-        dca_amean_anom = np.mean(dca).values
+        dca_scaled_worst_amean_anom = np.mean(dca_scaled_worstmem).values
+        dca_scaled_top5_amean_anom = np.mean(dca_scaled_top5).values
 
         clevs = np.arange(14,35,1)
         cmap = plt.cm.magma_r
 
-        plt.figure(figsize=(15,12))
-
-        ax = plt.subplot(322, projection = projection)
+        plt.figure(figsize=(7,6))
+        ax = plt.subplot(111, projection = projection)
         worst_member.plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
         ax.coastlines()
         plt.title(f'worst member')
+        plt.savefig(f'plots/ensemble_worst_member_worstmem_{datestr}_{leadtime}h.png')
 
-        ax = plt.subplot(323, projection = projection)
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
         perc_empirical.plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
         ax.coastlines()
         plt.title(f'empirical {perc}th percentile')
+        plt.savefig(f'plots/ensemble_worst_member_perc_{datestr}_{leadtime}h.png')
 
-        # ax = plt.subplot(324, projection = projection)
-        # perc_fitted.plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
-        # ax.coastlines()
-        # plt.title(f'fitted {perc}th percentile')
-
-        ax = plt.subplot(324, projection = projection)
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
         worst_5.plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
         ax.coastlines()
         plt.title(f'mean of 5 worst members')
+        plt.savefig(f'plots/ensemble_worst_member_top5_{datestr}_{leadtime}h.png')
 
-        ax = plt.subplot(321, projection = projection)
-        (dca+ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
+        (dca_scaled_worstmem+ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
         ax.coastlines()
-        plt.title(f'dca')
-        ax = plt.subplot(325, projection = projection)
+        plt.title(f'dca scaled on worst member')
+        plt.savefig(f'plots/ensemble_worst_member_dca_scaled_worst_{datestr}_{leadtime}h.png')
+
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
+        (dca_scaled_top5+ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
+        ax.coastlines()
+        plt.title(f'dca scaled on top5')
+        plt.savefig(f'plots/ensemble_worst_member_dca_scaled_top5_{datestr}_{leadtime}h.png')
+
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
         ensmean.plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
         ax.coastlines()
         plt.title('ensmean')
         plt.suptitle(f'init:{date_init} valid:{date_valid}')
-
-        plt.savefig(f'ensemble_worst_member_scale_a_{datestr}_{leadtime}h.png')
+        plt.savefig(f'plots/ensemble_worst_member_ensmean_{datestr}_{leadtime}h.png')
 
 
 
         clevs = np.arange(-3,3,0.25)
         cmap = plt.cm.RdBu_r
 
-        plt.figure(figsize=(15,8))
-        ax = plt.subplot(223, projection = projection)
-        (perc_empirical-ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
-        ax.coastlines()
-        plt.title(f'empirical {perc}th percentile amean={perc_empirical_amean_anom:.2f}')
-
-        # ax = plt.subplot(224, projection = projection)
-        # (perc_fitted-ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
-        # ax.coastlines()
-        # plt.title(f'fitted {perc}th percentile amean={perc_fitted_amean_anom:.2f}')
-        #
-        ax = plt.subplot(224, projection = projection)
-        (worst_5-ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
-        ax.coastlines()
-        plt.title(f'mean of 5 worst members amean={worst_5_amean_anom:.2f}')
-
-        ax = plt.subplot(222, projection = projection)
+        plt.figure(figsize=(7,6))
+        ax = plt.subplot(111, projection = projection)
         (worst_member-ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
         ax.coastlines()
         plt.title(f'worst member amean={worst_member_amean_anom:.2f}')
+        plt.savefig(f'plots/ensemble_worst_member_worstmem_{datestr}_{leadtime}h_anom.png')
 
-        ax = plt.subplot(221, projection = projection)
-        (dca).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
+        (perc_empirical-ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
         ax.coastlines()
-        plt.title(f'dca amean={dca_amean_anom:.2f}')
+        plt.title(f'empirical {perc}th percentile amean={perc_empirical_amean_anom:.2f}')
+        plt.savefig(f'plots/ensemble_worst_member_perc_{datestr}_{leadtime}h_anom.png')
 
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
+        (worst_5-ensmean).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
+        ax.coastlines()
+        plt.title(f'mean of 5 worst members amean={worst_5_amean_anom:.2f}')
+        plt.savefig(f'plots/ensemble_worst_member_top5_{datestr}_{leadtime}h_anom.png')
 
-        plt.suptitle(f'init:{date_init} valid:{date_valid}')
-        plt.tight_layout()
-        plt.savefig(f'plots/ensemble_worst_member_scale_a_{datestr}_{leadtime}h_anom.png')
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
+        (dca_scaled_worstmem).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
+        ax.coastlines()
+        plt.title(f'dca scaled on worst member amean={dca_scaled_worst_amean_anom:.2f}')
+        plt.savefig(f'plots/ensemble_worst_member_dca_scaled_worst_{datestr}_{leadtime}h_anom.png')
+
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
+        (dca_scaled_top5).plot.contourf(ax=ax, transform=projection, levels=clevs, cmap=cmap, extend='both')
+        ax.coastlines()
+        plt.title(f'dca scaled on worst5 amean={dca_scaled_top5_amean_anom:.2f}')
+        plt.savefig(f'plots/ensemble_worst_member_dca_scaled_top5_{datestr}_{leadtime}h_anom.png')
 
 
         plt.close('all')
-
-
-        # compute angles with repect to unit vector
-        ref = np.ones(n_flat)
-        def angle(v,w):
-            return np.arccos(np.dot(v,w) / (np.linalg.norm(v)* np.linalg.norm(w)))
-
-        angle_dca = angle(dca.values.flatten(),ref)
-        angle_worst_member = angle(worst_member.values.flatten(),ref)
-        angle_dca = angle(dca.values.flatten(),ref)
-
-
-
-
-

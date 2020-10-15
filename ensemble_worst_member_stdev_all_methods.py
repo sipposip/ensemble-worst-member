@@ -20,7 +20,7 @@ if not os.path.exists('plots2/'):
 leadtime = 72
 
 sens_methods = ['bootstrap', 'bootstrap_subens_25', 'mvn_uncertainty']
-methods = ['dca', 'worst_member', 'worst_5']
+methods = ['worst_member','dca_scaled_worst', 'worst_5','dca_scaled_worst5']
 df = []
 for date in pd.date_range('201906011200','201908251200', freq='5d'):
     datestr = date.strftime("%Y%m%d_%H%M")
@@ -37,11 +37,17 @@ for date in pd.date_range('201906011200','201908251200', freq='5d'):
 
 
 df = pd.concat(df)
+# drop perc95
+df = df[df['method']!='perc95']
 
-sns.catplot('sens_method','a', hue='method', data=df, kind='box')
+# paired colorblindsafe palette from colorbrewer2.org
+colors = ['#a6cee3', '#1f78b4','#b2df8a','#33a02c']
+p = sns.catplot('sens_method','a', hue='method', data=df, kind='box', hue_order=methods, palette=colors)
+p.set_xticklabels(rotation=15)
 plt.ylabel('stdev amplitude')
 plt.savefig('plots2/sensitivity_barplot_amplitude.svg')
-sns.catplot('sens_method','angle',hue='method', data=df, kind='box')
+p=sns.catplot('sens_method','angle',hue='method', data=df, kind='box', hue_order=methods, palette=colors)
+p.set_xticklabels(rotation=15)
 plt.ylabel('stdev angle')
 plt.savefig('plots2/sensitivity_barplot_angle.svg')
 
