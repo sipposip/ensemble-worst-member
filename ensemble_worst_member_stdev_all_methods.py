@@ -52,14 +52,18 @@ plt.ylabel('stdev angle')
 plt.savefig('plots2/sensitivity_barplot_angle.svg')
 
 
+
 # statistical tests
 stat_res = []
+
 for vvar in ['a', 'angle']:
     for sens_method in sens_methods:
         sub = df.query('sens_method==@sens_method ')
+        methods_remaining = methods[:]
         for method1 in methods:
-            for method2 in methods:
-                if method1 != method2:
+            methods_remaining.remove(method1)
+            for method2 in methods_remaining:
+                #if method1 != method2:
                     m1 = sub.query('method==@method1')[vvar].values
                     m2 = sub.query('method==@method2')[vvar].values
                     # our values are not indepenent, therefore we make a 1 sample
@@ -72,14 +76,19 @@ for vvar in ['a', 'angle']:
 
 stats_res = pd.concat(stat_res)
 
-# stats_res.fillna(0, inplace=True)
 
-for vvar in ['a', 'angle']:
-    for i,sens_method in enumerate(sens_methods):
-        plt.figure()
-        sub = stats_res.query('sens_method==@sens_method & vvar==@vvar')[['p', 'method1', 'method2']]
-        sns.heatmap(sub.pivot_table(values='p', index='method1', columns='method2'),
-                    annot=True, vmin=0, vmax=0.5)
-        plt.title(f'sens_method:{sens_method} variable:{vvar} p-values')
-        plt.savefig(f'plots2/ttes_res_{sens_method}_{vvar}.png')
+# make tables
+# for amplitude, there is only one non-redundtan combination, because
+# worst_member and dca_scaled_worst have the sampe amplitude, and
+# worst_5 and dca_scaled_worst_5 as well
 
+sub_a = stats_res[stats_res['vvar']=='a']
+sub_a = sub_a.query('method1=="worst_member" & method2=="worst_5"')
+
+# for angle, only the two dca methods are redundant
+sub_angle = stats_res[stats_res['vvar']=='angle']
+sub_angle = sub_angle.query('method1!="dca_scaled_worst5" & method2!="dca_scaled_worst5"')
+sub_angle = sub_angle.replace({'dca_scaled_worst':'dca'})
+
+sub_a[['sens_method','p']].to_csv('stat_test_a.csv', index=False)
+sub_angle[['method1','method2','sens_method','p']].round(3).to_csv('stat_test_angle.csv', index=False)
