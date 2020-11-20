@@ -49,7 +49,7 @@ ipath='/climstorage/sebastian/ensemble_worst_member/ecmwf_data/'
 m2_res_all = []
 leadtime = 72
 for date in pd.date_range('201906011200','201908251200', freq='5d'):
-    for leadtime in np.arange(6,24*6,6):
+    #for leadtime in np.arange(6,24*6,6):
         datestr = date.strftime("%Y%m%d_%H%M")
         ifile = f'{ipath}/ecmwf_ens_{datestr}_{var}_for_ens_worst_member.nc.nc'
 

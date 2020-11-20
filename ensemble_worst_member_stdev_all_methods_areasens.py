@@ -41,11 +41,11 @@ df = df[df['method']!='perc95']
 colors = ['#a6cee3', '#1f78b4','#b2df8a','#33a02c']
 p=sns.catplot('method','a', data=df, kind='box', order=methods, palette=colors)
 p.set_xticklabels(rotation=15)
-plt.ylabel('stdev amplitude')
+plt.ylabel('stdev $a$')
 plt.savefig('plots2/areasens_barplot_amplitude.svg')
 p=sns.catplot('method','angle', data=df, kind='box', order=methods, palette=colors)
 p.set_xticklabels(rotation=15)
-plt.ylabel('stdev angle')
+plt.ylabel(r'stdev $\alpha$')
 plt.savefig('plots2/areasens_barplot_angle.svg')
 
 
