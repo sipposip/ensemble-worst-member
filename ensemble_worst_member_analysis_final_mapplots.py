@@ -185,4 +185,26 @@ for date in (pd.to_datetime('201906011200'),pd.to_datetime('201907211200')):
 
 
 
+        # plot verification anomaly (era5 minus ensemble mean)
+        # era5 and the ensemble ar eon the same grid
+        date_era5 = date + pd.to_timedelta(leadtime, 'h')
+        era5_datestr = date_era5.strftime("%Y%m%d%H%M")
+        era5 = xr.open_dataset(f'era5_verifcation_data/era5_{era5_datestr}.nc')
+        era5 = era5.squeeze()
+        era5 = standardize_dataset(era5)
+        era5 = era5['t2m']
+        era5 = sellonlatbox(era5, *area)
+
+        era5_anom = era5 - 273.15 - ensmean
+        plt.figure(figsize=(7, 6))
+        ax = plt.subplot(111, projection=projection)
+        era5_anom.plot.contourf(ax=ax, transform=projection,levels=clevs,
+                               cmap=cmap, extend='both')
+        ax.coastlines()
+        plt.title(f'verifictaion anomaly for forecast valid {era5_datestr} \n (initialized {datestr})')
+        plt.savefig(f'plots/era5_{datestr}.png')
+
+
+
+
 
