@@ -8,14 +8,12 @@ from pylab import plt
 plt.switch_backend('agg')
 import numpy as np
 import pandas as pd
-import cartopy.crs as ccrs
 from scipy import stats
 import seaborn as sns
-import scipy.spatial
 
 from tqdm import trange
 
-from xarray_clim import standardize_dataset, sellonlatbox, weighted_areamean
+from xarray_clim import standardize_dataset, sellonlatbox
 
 plt.rcParams['savefig.bbox'] = 'tight'
 plt.ioff()
@@ -108,7 +106,7 @@ for date in pd.date_range('201906011200','201908251200', freq='5d'):
     for i_bootstrap in trange(n_bootstrap):
 
 
-        fc_sample = np.random.multivariate_normal(mean=ensmean.values.flatten(), cov=cov_matrix_orig, size=n_ens)
+        fc_sample = np.random.multivariate_normal(mean=ensmean.values.flatten(), cov=cov_matrix_orig, size=n_ens_sub)
 
         fc = xr.DataArray(data=fc_sample.reshape(fc_orig.shape), dims=fc_orig.dims, coords=fc_orig.coords)
 
