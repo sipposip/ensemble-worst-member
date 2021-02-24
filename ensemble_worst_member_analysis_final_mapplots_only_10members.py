@@ -140,26 +140,26 @@ for date in (pd.to_datetime('201906011200'),pd.to_datetime('201907211200')):
         (worst_member-ensmean).plot.contourf(ax=ax1, transform=projection, levels=clevs, cmap=cmap, extend='both',
                                              add_colorbar=False)
         ax1.coastlines()
-        plt.title(f'worst member amean={worst_member_amean_anom:.2f}')
+        plt.title(f'W1 amean={worst_member_amean_anom:.2f}')
 
 
         ax2 = plt.subplot(322, projection=projection)
         (worst_5-ensmean).plot.contourf(ax=ax2, transform=projection, levels=clevs, cmap=cmap, extend='both',
                                         add_colorbar=False)
         ax2.coastlines()
-        plt.title(f'mean of 5 worst members amean={worst_5_amean_anom:.2f}')
+        plt.title(f'W5 amean={worst_5_amean_anom:.2f}')
 
         ax3 = plt.subplot(323, projection=projection)
         (dca_scaled_worstmem).plot.contourf(ax=ax3, transform=projection, levels=clevs, cmap=cmap, extend='both',
                                          add_colorbar=False)
         ax3.coastlines()
-        plt.title(f'dca scaled on worst member amean={dca_scaled_worst_amean_anom:.2f}')
+        plt.title(f'DCA1 amean={dca_scaled_worst_amean_anom:.2f}')
 
         ax4 = plt.subplot(324, projection=projection)
         p = (dca_scaled_top5).plot.contourf(ax=ax4, transform=projection, levels=clevs, cmap=cmap, extend='both',
                                         add_colorbar=False)
         ax4.coastlines()
-        plt.title(f'dca scaled on worst5 amean={dca_scaled_top5_amean_anom:.2f}')
+        plt.title(f'DCA5 amean={dca_scaled_top5_amean_anom:.2f}')
 
 
         ax5 = plt.subplot(325, projection=projection)

@@ -20,7 +20,7 @@ colors = ['#a6cee3', '#1f78b4','#b2df8a','#33a02c']
 leadtime = 72
 
 sens_methods = ['bootstrap', 'bootstrap_subens_25', 'mvn_uncertainty']
-methods = ['worst_member','dca_scaled_worst', 'worst_5','dca_scaled_worst5']
+methods = ['W1','DCA1', 'W5','DCA5']
 df = []
 for date in pd.date_range('201906011200','201908251200', freq='5d'):
     datestr = date.strftime("%Y%m%d_%H%M")
@@ -30,6 +30,9 @@ for date in pd.date_range('201906011200','201908251200', freq='5d'):
         df = pd.read_pickle(ifile)
         # drop perc95
         df = df[df['method'] != 'perc95']
+        # change names
+        df = df.replace({'method': {'dca_scaled_worst': 'DCA1', 'dca_scaled_worst5': 'DCA5', 'worst_5': 'W5',
+                                    'worst_member': 'W1'}})
         plt.figure()
         sns.scatterplot('angle', 'a', hue='method', data=df, alpha=0.9, palette=colors,
                         hue_order=methods)

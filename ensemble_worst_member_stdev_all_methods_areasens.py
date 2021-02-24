@@ -19,7 +19,6 @@ if not os.path.exists('plots2/'):
 
 leadtime = 72
 
-methods = ['worst_member','dca_scaled_worst', 'worst_5','dca_scaled_worst5']
 df = []
 for date in pd.date_range('201906011200','201908251200', freq='5d'):
     datestr = date.strftime("%Y%m%d_%H%M")
@@ -37,6 +36,9 @@ df = pd.concat(df)
 # drop perc95
 df = df[df['method']!='perc95']
 
+# change names
+df = df.replace({'method':{'dca_scaled_worst':'DCA1', 'dca_scaled_worst5':'DCA5', 'worst_5':'W5', 'worst_member':'W1'}})
+methods = ['W1','DCA1', 'W5','DCA5']
 # paired colorblindsafe palette from colorbrewer2.org
 colors = ['#a6cee3', '#1f78b4','#b2df8a','#33a02c']
 p=sns.catplot('method','a', data=df, kind='box', order=methods, palette=colors)
